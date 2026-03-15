@@ -53,7 +53,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<ProgressState>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : defaultState;
+      return stored ? { ...defaultState, ...JSON.parse(stored) } : defaultState;
     } catch {
       return defaultState;
     }
