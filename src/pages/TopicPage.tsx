@@ -16,6 +16,9 @@ import HeapVisualizer from "@/components/HeapVisualizer";
 import TrieVisualizer from "@/components/TrieVisualizer";
 import AlgorithmFlowchart from "@/components/AlgorithmFlowchart";
 import SyntaxComparison from "@/components/SyntaxComparison";
+import DPVisualizer from "@/components/DPVisualizer";
+import { Textarea } from "@/components/ui/textarea";
+import { StickyNote, Save, CheckCircle2 } from "lucide-react";
 
 const TopicHeader = ({ node }: { node: RoadmapNode }) => {
   const { isBookmarked, toggleBookmark } = useProgress();
@@ -158,6 +161,10 @@ const CodeSnippet = ({ boilerplates, singleBoilerplate }: { boilerplates?: any[]
 
 const TopicPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
+  const { notes, updateNote, cloudSyncEnabled } = useProgress();
+  const [localNote, setLocalNote] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const allNodes = [...dsaRoadmap, ...systemDesignRoadmap];
   const node = allNodes.find((n) => n.id === topicId);
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
@@ -166,7 +173,24 @@ const TopicPage = () => {
     if (node?.subTopics?.length) {
       setActiveSubId(node.subTopics[0].id);
     }
-  }, [node]);
+    // Load initial note
+    if (topicId && notes[topicId]) {
+      setLocalNote(notes[topicId]);
+    } else {
+      setLocalNote("");
+    }
+  }, [node, topicId, notes]);
+
+  const handleSaveNote = () => {
+    if (!topicId) return;
+    setIsSaving(true);
+    updateNote(topicId, localNote);
+    setTimeout(() => {
+      setIsSaving(false);
+      setHasSaved(true);
+      setTimeout(() => setHasSaved(false), 2000);
+    }, 500);
+  };
 
   if (!node) {
     return (
@@ -197,6 +221,7 @@ const TopicPage = () => {
       case "sorting": return <SortingVisualizer />;
       case "heaps": return <HeapVisualizer />;
       case "binary-search": return <BinarySearchVisualizer />;
+      case "dynamic-programming": return <DPVisualizer />;
       default: return null;
     }
   };
@@ -330,6 +355,43 @@ const TopicPage = () => {
                     </section>
 
                     {/* Context/Strategy Section */}
+                    {/* Notes Section */}
+                    <section className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <StickyNote className="h-4 w-4 text-primary" />
+                          <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">Personalized Strategy Notes</h2>
+                        </div>
+                        <div className="h-px flex-1 bg-border ml-6" />
+                        <div className="ml-4 flex items-center gap-2">
+                          {cloudSyncEnabled && (
+                            <span className="text-[10px] text-primary/60 font-medium bg-primary/5 px-2 py-0.5 rounded border border-primary/10">Cloud Sync Active</span>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={handleSaveNote}
+                          >
+                            {hasSaved ? (
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                            ) : (
+                              <Save className="h-4 w-4 mr-2" />
+                            )}
+                            {hasSaved ? "Saved" : "Save Notes"}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="relative group">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur opacity-25 group-focus-within:opacity-50 transition-opacity" />
+                        <Textarea
+                          placeholder="Jot down your own insights, edge cases, or key patterns for this topic..."
+                          className="relative min-h-[150px] bg-card/50 backdrop-blur-sm border-border resize-none rounded-2xl p-6 focus:ring-primary/20 transition-all font-medium leading-relaxed"
+                          value={localNote}
+                          onChange={(e) => setLocalNote(e.target.value)}
+                        />
+                      </div>
+                    </section>
                     <section className="space-y-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

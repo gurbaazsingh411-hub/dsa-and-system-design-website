@@ -1,7 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Code2, Map, BookOpen, BarChart3, LayoutDashboard } from "lucide-react";
+import { Code2, Map, BookOpen, BarChart3, LayoutDashboard, User, LogOut } from "lucide-react";
 import { useProgress } from "@/contexts/ProgressContext";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthDialog } from "./AuthDialog";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const navItems = [
   { to: "/", label: "Home", icon: Code2 },
@@ -13,6 +24,7 @@ const navItems = [
 const Navbar = () => {
   const location = useLocation();
   const { overallProgress } = useProgress();
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -52,11 +64,37 @@ const Navbar = () => {
           })}
         </div>
 
-        <Link to="/dashboard" className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-sm hover:bg-muted transition-colors">
-          <BarChart3 className="h-4 w-4 text-primary" />
-          <span className="text-muted-foreground">Progress:</span>
-          <span className="font-mono font-semibold text-primary">{overallProgress}%</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-sm hover:bg-muted transition-colors">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <span className="text-muted-foreground hidden sm:inline">Progress:</span>
+            <span className="font-mono font-semibold text-primary">{overallProgress}%</span>
+          </Link>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full border border-border">
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-card border-border">
+                <DropdownMenuLabel className="font-display">My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="flex items-center gap-2 text-muted-foreground">
+                  <span className="truncate">{user.email}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="text-destructive gap-2 cursor-pointer">
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <AuthDialog />
+          )}
+        </div>
       </div>
     </nav>
   );
